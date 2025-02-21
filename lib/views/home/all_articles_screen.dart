@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:pulse_news/models/article.dart';
 import 'package:pulse_news/services/news_service.dart';
 import 'package:pulse_news/widgets/home/article_list.dart';
+import 'dart:math' show min;
 
 class AllArticlesScreen extends StatefulWidget {
   final String category;
+  final String title;
 
   const AllArticlesScreen({
     Key? key,
     required this.category,
+    required this.title,
   }) : super(key: key);
 
   @override
@@ -24,12 +27,13 @@ class _AllArticlesScreenState extends State<AllArticlesScreen> {
   bool _isLoading = true;
   bool _isLoadingMore = false;
   int _currentPage = 1;
-  bool _hasMorePages = true;
+  int _articlesPerPage = 25; // Increased initial load
+  bool _hasMoreArticles = true;
 
   @override
   void initState() {
     super.initState();
-    _loadArticles();
+    _loadInitialArticles();
     _scrollController.addListener(_scrollListener);
   }
 
@@ -40,114 +44,146 @@ class _AllArticlesScreenState extends State<AllArticlesScreen> {
   }
 
   void _scrollListener() {
-    if (_scrollController.position.pixels == _scrollController.position.maxScrollExtent) {
-      if (!_isLoadingMore && _hasMorePages) {
-        _loadMoreArticles();
-      }
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200 && // Trigger earlier
+        !_isLoadingMore &&
+        _hasMoreArticles) {
+      _loadMoreArticles();
     }
   }
 
-  Future<void> _loadArticles() async {
+  Future<void> _loadInitialArticles() async {
     setState(() {
       _isLoading = true;
       _currentPage = 1;
+      _articles.clear();
     });
 
     try {
-      final articles = await _newsService.getTopHeadlines(
-        category: widget.category,
-        page: _currentPage,
-      );
-
-      setState(() {
-        _articles = articles;
-        _isLoading = false;
-        _hasMorePages = articles.length == 10; // If we got 10 articles, assume there are more
-      });
-    } catch (e) {
-      print('Error loading articles: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      // Load first batch of 25 articles (might need multiple API calls)
+      final firstBatch = await _loadBatch(1, 25);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to load articles. Please try again.'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        setState(() {
+          _articles = firstBatch;
+          _isLoading = false;
+          _hasMoreArticles = firstBatch.length >= _articlesPerPage;
+        });
+      }
+    } catch (e) {
+      print('Error loading initial articles: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+        _showErrorSnackbar('Failed to load articles. Please try again.');
       }
     }
   }
 
+  Future<List<Article>> _loadBatch(int page, int count) async {
+    List<Article> articles = [];
+    int remainingCount = count;
+    int currentPage = page;
+
+    while (remainingCount > 0) {
+      final batch = await _newsService.getTopHeadlines(
+        category: widget.category,
+        page: currentPage,
+        pageSize: min(remainingCount, 20), // API typically limits to 20 per request
+      );
+
+      if (batch.isEmpty) break; // No more articles available
+
+      articles.addAll(batch);
+      remainingCount -= batch.length;
+      currentPage++;
+    }
+
+    return articles;
+  }
+
   Future<void> _loadMoreArticles() async {
-    if (_isLoadingMore) return;
+    if (_isLoadingMore || !_hasMoreArticles) return;
 
     setState(() {
       _isLoadingMore = true;
-      _currentPage++;
     });
 
     try {
-      final moreArticles = await _newsService.getTopHeadlines(
-        category: widget.category,
-        page: _currentPage,
-      );
+      _currentPage++;
+      final nextBatch = await _loadBatch(_currentPage, 20); // Load next 20 articles
 
-      setState(() {
-        if (moreArticles.isEmpty) {
-          _hasMorePages = false;
-        } else {
-          _articles.addAll(moreArticles);
-          _hasMorePages = moreArticles.length == 10;
-        }
-        _isLoadingMore = false;
-      });
+      if (mounted) {
+        setState(() {
+          _articles.addAll(nextBatch);
+          _isLoadingMore = false;
+          _hasMoreArticles = nextBatch.length > 0;
+        });
+      }
     } catch (e) {
       print('Error loading more articles: $e');
-      setState(() {
-        _isLoadingMore = false;
-        _currentPage--;
-      });
+      if (mounted) {
+        setState(() {
+          _currentPage--;
+          _isLoadingMore = false;
+        });
+        _showErrorSnackbar('Failed to load more articles.');
+      }
     }
+  }
+
+  void _showErrorSnackbar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+
+  Widget _buildLoadingIndicator() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 8),
+          Text(
+            'Loading more articles...',
+            style: TextStyle(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? Colors.white70
+                  : Colors.black54,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          widget.category == 'general'
-              ? 'All News'
-              : '${widget.category[0].toUpperCase()}${widget.category.substring(1)} News',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isDarkMode ? Colors.white : Colors.black,
-          ),
+          widget.title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
       ),
       body: _isLoading
-          ? const Center(
-        child: CircularProgressIndicator(),
-      )
+          ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
-        onRefresh: _loadArticles,
+        onRefresh: _loadInitialArticles,
         child: ListView.builder(
           controller: _scrollController,
-          itemCount: _articles.length + (_isLoadingMore ? 1 : 0),
+          itemCount: _articles.length + (_hasMoreArticles ? 1 : 0),
           itemBuilder: (context, index) {
             if (index == _articles.length) {
-              return const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: CircularProgressIndicator(),
-                ),
-              );
+              return _isLoadingMore
+                  ? _buildLoadingIndicator()
+                  : const SizedBox.shrink();
             }
-
             return ArticleList(articles: [_articles[index]]);
           },
         ),

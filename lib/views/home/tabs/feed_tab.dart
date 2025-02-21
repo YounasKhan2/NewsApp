@@ -149,7 +149,7 @@ class _FeedTabState extends State<FeedTab> {
                       color: isDarkMode ? Colors.white : Colors.black,
                     ),
                   ),
-                  // In lib/views/home/tabs/feed_tab.dart, update the TextButton:
+
                   TextButton(
                     onPressed: () {
                       Navigator.push(
@@ -157,6 +157,9 @@ class _FeedTabState extends State<FeedTab> {
                         MaterialPageRoute(
                           builder: (context) => AllArticlesScreen(
                             category: _selectedCategory,
+                            title: _selectedCategory == 'general'
+                                ? 'Latest News'
+                                : '${_selectedCategory[0].toUpperCase()}${_selectedCategory.substring(1)} News',
                           ),
                         ),
                       );

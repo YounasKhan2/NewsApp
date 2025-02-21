@@ -6,9 +6,14 @@ class NewsService {
   static const String _baseUrl = 'https://newsapi.org/v2';
   static const String _apiKey = '67286b996b91454a92ed458e449b50bd';
 
-  Future<List<Article>> getTopHeadlines({String category = 'general', int page = 1}) async {
+  // In lib/services/news_service.dart
+  Future<List<Article>> getTopHeadlines({
+    String category = 'general',
+    int page = 1,
+    int pageSize = 20, // Add pageSize parameter
+  }) async {
     try {
-      final url = '$_baseUrl/top-headlines?country=us&pageSize=10&page=$page'
+      final url = '$_baseUrl/top-headlines?country=us&pageSize=$pageSize&page=$page'
           '${category != 'general' ? '&category=$category' : ''}'
           '&apiKey=$_apiKey';
 
