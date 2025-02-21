@@ -112,26 +112,49 @@ class _AllArticlesScreenState extends State<AllArticlesScreen> {
 
     try {
       _currentPage++;
-      final nextBatch = await _loadBatch(_currentPage, 20); // Load next 20 articles
+      List<Article> nextBatch = await _newsService.getTopHeadlines(
+        category: widget.category,
+        page: _currentPage,
+        pageSize: 20, // Standardized to 20 per batch
+      );
+
+      // Prevent duplication using a Set of unique article URLs (excluding null values)
+      Set<String> existingArticleUrls = _articles
+          .map((article) => article.url)
+          .where((url) => url != null) // Remove null values
+          .cast<String>() // Ensure Set<String> type
+          .toSet();
+
+      List<Article> uniqueArticles = nextBatch
+          .where((article) => article.url != null && !existingArticleUrls.contains(article.url))
+          .toList();
 
       if (mounted) {
         setState(() {
-          _articles.addAll(nextBatch);
+          if (uniqueArticles.isNotEmpty) {
+            _articles.addAll(uniqueArticles);
+          } else {
+            // If no new unique articles, revert the page number
+            _currentPage--;
+          }
           _isLoadingMore = false;
-          _hasMoreArticles = nextBatch.length > 0;
+          _hasMoreArticles = nextBatch.isNotEmpty; // Stop fetching if API returns empty
         });
       }
     } catch (e) {
       print('Error loading more articles: $e');
       if (mounted) {
         setState(() {
-          _currentPage--;
+          _currentPage--; // Prevent page increment on failure
           _isLoadingMore = false;
         });
         _showErrorSnackbar('Failed to load more articles.');
       }
     }
   }
+
+
+
 
   void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(

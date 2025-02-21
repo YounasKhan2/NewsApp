@@ -23,6 +23,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   final BookmarksService _bookmarksService = BookmarksService();
   bool _isBookmarked = false;
   bool _isLoading = true;
+  double _textScaleFactor = 1.0;
 
   @override
   void initState() {
@@ -78,6 +79,27 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     }
   }
 
+  void _openArticleUrl() async {
+    if (widget.article.url != null) {
+      final Uri uri = Uri.parse(widget.article.url!);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      }
+    }
+  }
+
+  void _increaseTextSize() {
+    setState(() {
+      _textScaleFactor += 0.1;
+    });
+  }
+
+  void _decreaseTextSize() {
+    setState(() {
+      _textScaleFactor -= 0.1;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -102,175 +124,172 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
       ),
       body: SingleChildScrollView(
         child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-        // Feature Image
-        if (widget.article.imageUrl != null)
-        CachedNetworkImage(
-        imageUrl: widget.article.imageUrl!,
-        height: 240,
-        width: double.infinity,
-        fit: BoxFit.cover,
-        placeholder: (context, url) => Container(
-          height: 240,
-          color: Colors.grey.shade300,
-          child: const Center(child: CircularProgressIndicator()),
-        ),
-        errorWidget: (context, url, error) => Container(
-          height: 240,
-          color: Colors.grey.shade300,
-          child: const Icon(Icons.image_not_supported, size: 50),
-        ),
-      )
-      else
-      Container(
-      height: 240,
-      color: Colors.grey.shade300,
-      child: const Icon(Icons.image_not_supported, size: 50),
-    ),
-
-    // Article Content
-    Padding(
-    padding: const EdgeInsets.all(16),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    // Title
-    Text(
-    widget.article.title ?? 'No title',
-    style: const TextStyle(
-    fontSize: 24,
-    fontWeight: FontWeight.bold,
-    ),
-    ),
-    const SizedBox(height: 16),
-
-    // Metadata
-    Row(
-    children: [
-    CircleAvatar(
-    radius: 20,
-    backgroundColor: Colors.grey.shade200,
-    child: Text(
-    widget.article.author?.isNotEmpty == true
-    ? widget.article.author![0].toUpperCase()
-        : 'A',
-    style: TextStyle(
-      // lib/views/article/article_detail_screen.dart (continued)
-      color: Theme.of(context).primaryColor,
-      fontWeight: FontWeight.bold,
-    ),
-    ),
-    ),
-      const SizedBox(width: 12),
-      Expanded(
-        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.article.author ?? 'Unknown Author',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              widget.article.publishedAt != null
-                  ? _formatDate(widget.article.publishedAt!)
-                  : 'Unknown date',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ],
-    ),
-      const SizedBox(height: 24),
-
-      // Description
-      if (widget.article.description != null)
-        Text(
-          widget.article.description!,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            color: Colors.grey.shade800,
-          ),
-        ),
-      const SizedBox(height: 24),
-
-      // Content
-      if (widget.article.content != null)
-        Html(
-          data: _formatContent(widget.article.content!),
-          style: {
-            "body": Style(
-              fontSize: FontSize(16),
-              lineHeight: LineHeight(1.6),
-            ),
-            "a": Style(
-              color: Theme.of(context).primaryColor,
-              textDecoration: TextDecoration.none,
-            ),
-          },
-          onLinkTap: (String? url, Map<String, String> attributes, element) async {
-            if (url != null) {
-              final Uri uri = Uri.parse(url);
-              if (await canLaunchUrl(uri)) {
-                await launchUrl(uri, mode: LaunchMode.inAppWebView);
-              }
-            }
-          },
-        )
-      else
-        const Text(
-          'No content available',
-          style: TextStyle(
-            fontSize: 16,
-            fontStyle: FontStyle.italic,
-          ),
-        ),
-
-      const SizedBox(height: 32),
-
-      // Source link
-      if (widget.article.url != null)
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Source:',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 8),
-            GestureDetector(
-              onTap: () {
-                // TODO: Open webview or browser
-              },
-              child: Text(
-                widget.article.url!,
-                style: TextStyle(
-                  color: Theme.of(context).primaryColor,
-                  decoration: TextDecoration.underline,
+            // Feature Image
+            if (widget.article.imageUrl != null)
+              CachedNetworkImage(
+                imageUrl: widget.article.imageUrl!,
+                height: 240,
+                width: double.infinity,
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Container(
+                  height: 240,
+                  color: Colors.grey.shade300,
+                  child: const Center(child: CircularProgressIndicator()),
                 ),
+                errorWidget: (context, url, error) => Container(
+                  height: 240,
+                  color: Colors.grey.shade300,
+                  child: const Icon(Icons.image_not_supported, size: 50),
+                ),
+              )
+            else
+              Container(
+                height: 240,
+                color: Colors.grey.shade300,
+                child: const Icon(Icons.image_not_supported, size: 50),
+              ),
+
+            // Article Content
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  Text(
+                    widget.article.title ?? 'No title',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Metadata
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.grey.shade200,
+                        child: Text(
+                          widget.article.author?.isNotEmpty == true
+                              ? widget.article.author![0].toUpperCase()
+                              : 'A',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.article.author ?? 'Unknown Author',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            Text(
+                              widget.article.publishedAt != null
+                                  ? _formatDate(widget.article.publishedAt!)
+                                  : 'Unknown date',
+                              style: TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Description
+                  if (widget.article.description != null)
+                    Text(
+                      widget.article.description!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                  const SizedBox(height: 24),
+
+                  // Content
+                  if (widget.article.content != null)
+                    Html(
+                      data: _formatContent(widget.article.content!),
+                      style: {
+                        "body": Style(
+                          fontSize: FontSize(16 * _textScaleFactor),
+                          lineHeight: LineHeight(1.6),
+                        ),
+                        "a": Style(
+                          color: Theme.of(context).primaryColor,
+                          textDecoration: TextDecoration.none,
+                        ),
+                      },
+                      onLinkTap: (String? url, Map<String, String> attributes, element) async {
+                        if (url != null) {
+                          final Uri uri = Uri.parse(url);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(uri, mode: LaunchMode.inAppWebView);
+                          }
+                        }
+                      },
+                    )
+                  else
+                    const Text(
+                      'No content available',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+
+                  const SizedBox(height: 32),
+
+                  // Source link
+                  if (widget.article.url != null)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Source:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        GestureDetector(
+                          onTap: _openArticleUrl,
+                          child: Text(
+                            widget.article.url!,
+                            style: TextStyle(
+                              color: Theme.of(context).primaryColor,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                  const SizedBox(height: 60), // Bottom padding
+                ],
               ),
             ),
           ],
-        ),
-
-      const SizedBox(height: 60), // Bottom padding
-    ],
-    ),
-    ),
-            ],
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -295,9 +314,12 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
               _buildActionButton(
                 icon: Icons.text_increase,
                 label: 'Text Size',
-                onTap: () {
-                  // TODO: Implement text resize
-                },
+                onTap: _increaseTextSize,
+              ),
+              _buildActionButton(
+                icon: Icons.text_decrease,
+                label: 'Text Size',
+                onTap: _decreaseTextSize,
               ),
             ],
           ),

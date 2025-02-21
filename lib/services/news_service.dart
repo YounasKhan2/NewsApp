@@ -6,11 +6,10 @@ class NewsService {
   static const String _baseUrl = 'https://newsapi.org/v2';
   static const String _apiKey = '67286b996b91454a92ed458e449b50bd';
 
-  // In lib/services/news_service.dart
   Future<List<Article>> getTopHeadlines({
     String category = 'general',
     int page = 1,
-    int pageSize = 20, // Add pageSize parameter
+    int pageSize = 20,
   }) async {
     try {
       final url = '$_baseUrl/top-headlines?country=us&pageSize=$pageSize&page=$page'
@@ -24,7 +23,26 @@ class NewsService {
 
         if (data['status'] == 'ok') {
           final articlesJson = data['articles'] as List;
-          return articlesJson.map((json) => Article.fromJson(json)).toList();
+
+          // Use Set to store unique articles based on URL
+          Set<String> seenUrls = {};
+          List<Article> articles = [];
+
+          // Process articles in parallel for efficiency
+          await Future.wait(articlesJson.map((json) async {
+            Article article = Article.fromJson(json);
+            if (await _isValidImageUrl(article.imageUrl) &&
+                article.url != null &&
+                !seenUrls.contains(article.url)) {
+              seenUrls.add(article.url!);
+              articles.add(article);
+            }
+          }));
+
+          print('Total articles fetched: ${articlesJson.length}');
+          print('Unique articles with valid images: ${articles.length}');
+
+          return articles;
         } else {
           throw Exception(data['message'] ?? 'Failed to fetch news');
         }
@@ -49,7 +67,26 @@ class NewsService {
 
         if (data['status'] == 'ok') {
           final articlesJson = data['articles'] as List;
-          return articlesJson.map((json) => Article.fromJson(json)).toList();
+
+          // Use Set to store unique articles based on URL
+          Set<String> seenUrls = {};
+          List<Article> articles = [];
+
+          // Process articles in parallel for efficiency
+          await Future.wait(articlesJson.map((json) async {
+            Article article = Article.fromJson(json);
+            if (await _isValidImageUrl(article.imageUrl) &&
+                article.url != null &&
+                !seenUrls.contains(article.url)) {
+              seenUrls.add(article.url!);
+              articles.add(article);
+            }
+          }));
+
+          print('Total articles fetched: ${articlesJson.length}');
+          print('Unique articles with valid images: ${articles.length}');
+
+          return articles;
         } else {
           throw Exception(data['message'] ?? 'Failed to search news');
         }
@@ -59,6 +96,17 @@ class NewsService {
     } catch (e) {
       print('Error searching news: $e');
       rethrow;
+    }
+  }
+
+  Future<bool> _isValidImageUrl(String? imageUrl) async {
+    if (imageUrl == null || imageUrl.trim().isEmpty) return false;
+
+    try {
+      final response = await http.head(Uri.parse(imageUrl));
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
     }
   }
 }

@@ -28,7 +28,7 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _loadThemePreference() async {
     final prefs = await SharedPreferences.getInstance();
-    final themeString = prefs.getString('theme_mode') ?? 'system';
+    final themeString = prefs.getString('theme_mode') ?? 'light';
     setState(() {
       _themeMode = _getThemeModeFromString(themeString);
     });
