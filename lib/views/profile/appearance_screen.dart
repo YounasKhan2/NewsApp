@@ -1,4 +1,3 @@
-// lib/views/profile/appearance_screen.dart
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -31,12 +30,12 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('theme_mode', theme);
 
-    // Recreate main app to apply theme change immediately
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Theme updated. Restart app to see all changes.'),
-          duration: Duration(seconds: 2),
+        SnackBar(
+          content: const Text('Theme updated. Restart app to see all changes.'),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Theme.of(context).primaryColor,
         ),
       );
     }
@@ -45,21 +44,26 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final textColor = isDarkMode ? Colors.white70 : Colors.black87;
+    final containerColor = isDarkMode ? Colors.grey[900] : Colors.grey[200];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Appearance'),
+        backgroundColor: isDarkMode ? Colors.black : Colors.white,
+        elevation: 0,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Theme',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 16),
@@ -68,47 +72,57 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
               title: 'System default',
               subtitle: 'Follow system theme',
               value: 'system',
+              isDarkMode: isDarkMode,
             ),
             _buildThemeOption(
               icon: Icons.light_mode,
               title: 'Light',
               subtitle: 'Light color theme',
               value: 'light',
+              isDarkMode: isDarkMode,
             ),
             _buildThemeOption(
               icon: Icons.dark_mode,
               title: 'Dark',
               subtitle: 'Dark color theme',
               value: 'dark',
+              isDarkMode: isDarkMode,
             ),
 
             const SizedBox(height: 32),
-            const Text(
+            Text(
               'Current theme',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
+                color: textColor,
               ),
             ),
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                color: containerColor,
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: isDarkMode ? Colors.grey[700]! : Colors.grey[400]!,
+                  width: 1,
+                ),
               ),
               child: Row(
                 children: [
                   Icon(
                     isDarkMode ? Icons.dark_mode : Icons.light_mode,
                     color: isDarkMode ? Colors.amber : Colors.orange,
+                    size: 28,
                   ),
                   const SizedBox(width: 16),
                   Text(
                     isDarkMode ? 'Dark theme active' : 'Light theme active',
                     style: TextStyle(
                       fontWeight: FontWeight.w500,
-                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontSize: 16,
+                      color: textColor,
                     ),
                   ),
                 ],
@@ -125,6 +139,7 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
     required String title,
     required String subtitle,
     required String value,
+    required bool isDarkMode,
   }) {
     final isSelected = _selectedTheme == value;
 
@@ -138,22 +153,23 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
       },
       title: Row(
         children: [
-          Icon(icon),
+          Icon(icon, color: isDarkMode ? Colors.white70 : Colors.black87),
           const SizedBox(width: 16),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 16,
+                  color: isDarkMode ? Colors.white : Colors.black,
                 ),
               ),
               Text(
                 subtitle,
                 style: TextStyle(
-                  color: Colors.grey.shade600,
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                   fontSize: 14,
                 ),
               ),
@@ -161,8 +177,9 @@ class _AppearanceScreenState extends State<AppearanceScreen> {
           ),
         ],
       ),
+      activeColor: Theme.of(context).primaryColor,
       secondary: isSelected
-          ? Icon(Icons.check, color: Theme.of(context).primaryColor)
+          ? Icon(Icons.check, color: isDarkMode ? Colors.amber : Colors.blue)
           : null,
     );
   }

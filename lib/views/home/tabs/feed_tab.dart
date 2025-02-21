@@ -1,10 +1,10 @@
-// lib/views/home/tabs/feed_tab.dart
 import 'package:flutter/material.dart';
 import 'package:pulse_news/models/article.dart';
 import 'package:pulse_news/services/news_service.dart';
 import 'package:pulse_news/widgets/home/trending_slider.dart';
 import 'package:pulse_news/widgets/home/category_chips.dart';
 import 'package:pulse_news/widgets/home/article_list.dart';
+import 'package:pulse_news/views/home/all_articles_screen.dart';
 
 class FeedTab extends StatefulWidget {
   const FeedTab({Key? key}) : super(key: key);
@@ -32,10 +32,7 @@ class _FeedTabState extends State<FeedTab> {
     });
 
     try {
-      // Load trending articles (we'll use general category for trending)
       final trendingArticles = await _newsService.getTopHeadlines();
-
-      // Load category-specific articles if not general
       final categoryArticles = _selectedCategory == 'general'
           ? trendingArticles
           : await _newsService.getTopHeadlines(category: _selectedCategory);
@@ -69,23 +66,34 @@ class _FeedTabState extends State<FeedTab> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Pulse News',
           style: TextStyle(
             fontWeight: FontWeight.bold,
+            color: isDarkMode ? Colors.white : Colors.black,
           ),
         ),
+        backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+        elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.search),
+            icon: Icon(
+              Icons.search,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
             onPressed: () {
               // TODO: Navigate to search screen
             },
           ),
           IconButton(
-            icon: const Icon(Icons.notifications_none),
+            icon: Icon(
+              Icons.notifications_none,
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
             onPressed: () {
               // TODO: Implement notifications
             },
@@ -100,13 +108,14 @@ class _FeedTabState extends State<FeedTab> {
         onRefresh: _loadNews,
         child: ListView(
           children: [
-            const Padding(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: Text(
                 'Trending',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: isDarkMode ? Colors.white : Colors.black,
                 ),
               ),
             ),
@@ -134,16 +143,30 @@ class _FeedTabState extends State<FeedTab> {
                     _selectedCategory == 'general'
                         ? 'Latest News'
                         : '${_selectedCategory[0].toUpperCase()}${_selectedCategory.substring(1)} News',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.black,
                     ),
                   ),
+                  // In lib/views/home/tabs/feed_tab.dart, update the TextButton:
                   TextButton(
                     onPressed: () {
-                      // TODO: Navigate to all articles
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => AllArticlesScreen(
+                            category: _selectedCategory,
+                          ),
+                        ),
+                      );
                     },
-                    child: const Text('See All'),
+                    child: Text(
+                      'See All',
+                      style: TextStyle(
+                        color: Theme.of(context).primaryColor,
+                      ),
+                    ),
                   ),
                 ],
               ),

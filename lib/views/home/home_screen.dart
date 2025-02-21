@@ -1,62 +1,102 @@
 import 'package:flutter/material.dart';
-import 'package:pulse_news/services/auth_service.dart';
 import 'package:pulse_news/views/home/tabs/feed_tab.dart';
 import 'package:pulse_news/views/home/tabs/categories_tab.dart';
 import 'package:pulse_news/views/home/tabs/bookmarks_tab.dart';
 import 'package:pulse_news/views/home/tabs/profile_tab.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-  final _authService = AuthService();
+  int _currentIndex = 0;
 
-  static const List<Widget> _tabs = [
-    FeedTab(),
-    CategoriesTab(),
-    BookmarksTab(),
-    ProfileTab(),
+  final List<Widget> _screens = [
+    const FeedTab(),
+    const CategoriesTab(),
+    const BookmarksTab(),
+    const ProfileTab(),
   ];
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      body: _tabs[_selectedIndex],
+      body: _screens[_currentIndex],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedIndex,
-        onDestinationSelected: (int index) {
+        selectedIndex: _currentIndex,
+        onDestinationSelected: (index) {
           setState(() {
-            _selectedIndex = index;
+            _currentIndex = index;
           });
         },
-        destinations: const [
+        backgroundColor: isDarkMode ? Colors.grey[900] : Colors.white,
+        elevation: 8,
+        shadowColor: Colors.black.withOpacity(0.1),
+        height: 65,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        animationDuration: const Duration(milliseconds: 400),
+        destinations: [
           NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
+            icon: Icon(
+              Icons.home_outlined,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+            selectedIcon: Icon(
+              Icons.home,
+              color: Theme.of(context).primaryColor,
+            ),
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.category_outlined),
-            selectedIcon: Icon(Icons.category),
+            icon: Icon(
+              Icons.category_outlined,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+            selectedIcon: Icon(
+              Icons.category,
+              color: Theme.of(context).primaryColor,
+            ),
             label: 'Categories',
           ),
           NavigationDestination(
-            icon: Icon(Icons.bookmark_border_outlined),
-            selectedIcon: Icon(Icons.bookmark),
+            icon: Icon(
+              Icons.bookmark_outline,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+            selectedIcon: Icon(
+              Icons.bookmark,
+              color: Theme.of(context).primaryColor,
+            ),
             label: 'Bookmarks',
           ),
           NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
+            icon: Icon(
+              Icons.person_outline,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+            selectedIcon: Icon(
+              Icons.person,
+              color: Theme.of(context).primaryColor,
+            ),
             label: 'Profile',
           ),
         ],
       ),
     );
+  }
+
+  Future<bool> onWillPop() async {
+    if (_currentIndex != 0) {
+      setState(() {
+        _currentIndex = 0;
+      });
+      return false;
+    }
+    return true;
   }
 }

@@ -1,6 +1,4 @@
-// lib/widgets/home/category_chips.dart (updated)
 import 'package:flutter/material.dart';
-import 'package:pulse_news/models/category.dart';
 
 class CategoryChips extends StatelessWidget {
   final String selectedCategory;
@@ -14,7 +12,17 @@ class CategoryChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final categories = Category.getCategories();
+    final categories = [
+      'general',
+      'business',
+      'technology',
+      'sports',
+      'entertainment',
+      'health',
+      'science',
+    ];
+
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return SizedBox(
       height: 40,
@@ -23,21 +31,29 @@ class CategoryChips extends StatelessWidget {
         itemCount: categories.length,
         itemBuilder: (context, index) {
           final category = categories[index];
-          final isSelected = selectedCategory == category.apiName;
+          final isSelected = selectedCategory == category;
 
           return Padding(
             padding: const EdgeInsets.only(right: 8),
             child: ChoiceChip(
-              label: Text(category.name),
+              label: Text(
+                  category == 'general' ? 'All' :
+                  '${category[0].toUpperCase()}${category.substring(1)}'
+              ),
               selected: isSelected,
               selectedColor: Theme.of(context).primaryColor,
+              backgroundColor: isDarkMode ? Colors.grey[800] : Colors.grey[200],
               labelStyle: TextStyle(
-                color: isSelected ? Colors.white : Colors.black,
+                color: isSelected
+                    ? Colors.white
+                    : (isDarkMode ? Colors.white70 : Colors.black87),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
+              elevation: isSelected ? 2 : 0,
+              pressElevation: 4,
               onSelected: (selected) {
                 if (selected) {
-                  onCategorySelected(category.apiName);
+                  onCategorySelected(category);
                 }
               },
             ),

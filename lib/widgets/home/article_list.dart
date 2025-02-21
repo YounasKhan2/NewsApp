@@ -1,4 +1,3 @@
-// lib/widgets/home/article_list.dart
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:pulse_news/models/article.dart';
@@ -30,7 +29,10 @@ class _ArticleListState extends State<ArticleList> {
   Future<void> _loadBookmarks() async {
     final bookmarks = await _bookmarksService.getBookmarkedArticles();
     setState(() {
-      _bookmarkedArticles = bookmarks.map((article) => article.url ?? '').toSet();
+      _bookmarkedArticles = bookmarks
+          .where((article) => article.url != null)
+          .map((article) => article.url!)
+          .toSet();
     });
   }
 
@@ -54,10 +56,19 @@ class _ArticleListState extends State<ArticleList> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     if (widget.articles.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
-        child: Center(child: Text('No articles available')),
+        child: Center(
+          child: Text(
+            'No articles available',
+            style: TextStyle(
+              color: isDarkMode ? Colors.white70 : Colors.black54,
+            ),
+          ),
+        ),
       );
     }
 
@@ -73,6 +84,7 @@ class _ArticleListState extends State<ArticleList> {
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           elevation: 2,
+          color: isDarkMode ? Colors.grey[850] : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
@@ -83,12 +95,13 @@ class _ArticleListState extends State<ArticleList> {
                 MaterialPageRoute(
                   builder: (context) => ArticleDetailScreen(article: article),
                 ),
-              );
+              ).then((_) => _loadBookmarks());
             },
             borderRadius: BorderRadius.circular(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Image
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(12),
@@ -101,28 +114,37 @@ class _ArticleListState extends State<ArticleList> {
                     fit: BoxFit.cover,
                     placeholder: (context, url) => Container(
                       height: 180,
-                      color: Colors.grey.shade300,
+                      color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                       child: const Center(
                         child: CircularProgressIndicator(),
                       ),
                     ),
                     errorWidget: (context, url, error) => Container(
                       height: 180,
-                      color: Colors.grey.shade300,
-                      child: const Icon(Icons.image_not_supported),
+                      color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                      child: Icon(
+                        Icons.image_not_supported,
+                        color: isDarkMode ? Colors.white54 : Colors.black38,
+                      ),
                     ),
                   )
                       : Container(
                     height: 180,
-                    color: Colors.grey.shade300,
-                    child: const Icon(Icons.image_not_supported),
+                    color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                    child: Icon(
+                      Icons.image_not_supported,
+                      color: isDarkMode ? Colors.white54 : Colors.black38,
+                    ),
                   ),
                 ),
+
+                // Content
                 Padding(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Source and time
                       Row(
                         children: [
                           Container(
@@ -147,38 +169,48 @@ class _ArticleListState extends State<ArticleList> {
                           Text(
                             article.timeAgo,
                             style: TextStyle(
-                              color: Colors.grey.shade600,
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                               fontSize: 12,
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
+
+                      // Title
                       Text(
                         article.title ?? 'No title',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: isDarkMode ? Colors.white : Colors.black,
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        article.description ?? 'No description available',
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                          fontSize: 14,
+
+                      // Description
+                      if (article.description != null)
+                        Text(
+                          article.description!,
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                            fontSize: 14,
+                          ),
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                       const SizedBox(height: 16),
+
+                      // Actions
                       Row(
                         children: [
                           CircleAvatar(
                             radius: 16,
-                            backgroundColor: Colors.grey.shade200,
+                            backgroundColor: isDarkMode
+                                ? Colors.grey[700]
+                                : Colors.grey[200],
                             child: Text(
                               article.author?.isNotEmpty == true
                                   ? article.author![0].toUpperCase()
@@ -194,7 +226,9 @@ class _ArticleListState extends State<ArticleList> {
                             child: Text(
                               article.author ?? 'Unknown',
                               style: TextStyle(
-                                color: Colors.grey.shade800,
+                                color: isDarkMode
+                                    ? Colors.grey[300]
+                                    : Colors.grey[800],
                                 fontWeight: FontWeight.w500,
                               ),
                               maxLines: 1,
@@ -208,14 +242,17 @@ class _ArticleListState extends State<ArticleList> {
                                   : Icons.bookmark_border_outlined,
                               color: isBookmarked
                                   ? Theme.of(context).primaryColor
-                                  : null,
+                                  : (isDarkMode ? Colors.grey[400] : Colors.grey[600]),
                             ),
                             onPressed: () => _toggleBookmark(article),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.share_outlined),
+                            icon: Icon(
+                              Icons.share_outlined,
+                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            ),
                             onPressed: () {
-                              // TODO: Share article
+                              // TODO: Implement share functionality
                             },
                           ),
                         ],
