@@ -6,7 +6,8 @@ import 'package:pulse_news/models/article.dart';
 import 'package:pulse_news/services/bookmarks_service.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-
+import 'package:pulse_news/services/reading_history_service.dart';
+//----------------
 class ArticleDetailScreen extends StatefulWidget {
   final Article article;
 
@@ -29,6 +30,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
   void initState() {
     super.initState();
     _checkIfBookmarked();
+    _addToReadingHistory();
   }
 
   Future<void> _checkIfBookmarked() async {
@@ -42,6 +44,11 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
       _isBookmarked = isBookmarked;
       _isLoading = false;
     });
+  }
+
+  Future<void> _addToReadingHistory() async {
+    final readingHistoryService = ReadingHistoryService();
+    await readingHistoryService.addToHistory(widget.article);
   }
 
   Future<void> _toggleBookmark() async {

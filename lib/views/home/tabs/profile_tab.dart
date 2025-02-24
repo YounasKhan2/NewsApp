@@ -7,6 +7,9 @@ import 'package:pulse_news/views/profile/about_screen.dart';
 import 'package:pulse_news/views/profile/appearance_screen.dart';
 import 'package:pulse_news/views/profile/edit_profile_screen.dart';
 import 'package:pulse_news/views/profile/help_support_screen.dart';
+//-------------------
+import 'package:pulse_news/services/reading_history_service.dart';
+import 'package:pulse_news/views/profile/reading_history_screen.dart';
 
 class ProfileTab extends StatefulWidget {
   const ProfileTab({Key? key}) : super(key: key);
@@ -20,17 +23,29 @@ class _ProfileTabState extends State<ProfileTab> {
   final BookmarksService _bookmarksService = BookmarksService();
   bool _isLoading = false;
   int _savedArticlesCount = 0;
+  //----------------------------
+  final ReadingHistoryService _readingHistoryService = ReadingHistoryService();
+  int _readingHistoryCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadSavedArticlesCount();
+    //----------------------------
+    _loadReadingHistoryCount();
   }
 
   Future<void> _loadSavedArticlesCount() async {
     final savedArticles = await _bookmarksService.getBookmarkedArticles();
     setState(() {
       _savedArticlesCount = savedArticles.length;
+    });
+  }
+//-----------------------------
+  Future<void> _loadReadingHistoryCount() async {
+    final count = await _readingHistoryService.getHistoryCount();
+    setState(() {
+      _readingHistoryCount = count;
     });
   }
 
@@ -184,12 +199,24 @@ class _ProfileTabState extends State<ProfileTab> {
                   ),
                 ),
                 const SizedBox(width: 16),
+                //-----------------------------
+                // In ProfileTab
                 Expanded(
-                  child: _buildStatCard(
-                    context,
-                    Icons.history,
-                    '0', // Placeholder for reading history
-                    'Reading History',
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ReadingHistoryScreen(),
+                        ),
+                      ).then((_) => _loadReadingHistoryCount());
+                    },
+                    child: _buildStatCard(
+                      context,
+                      Icons.history,
+                      _readingHistoryCount.toString(),
+                      'Reading History',
+                    ),
                   ),
                 ),
               ],
