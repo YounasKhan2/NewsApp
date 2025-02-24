@@ -1,16 +1,15 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
 buildscript {
-    ext.kotlin_version = '1.8.22'
+    ext.kotlin_version = '1.8.20' // Use the latest Kotlin version
     repositories {
         google()
         mavenCentral()
-        maven {
-            url "https://storage.googleapis.com/download.flutter.io"
-        }
     }
-
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.2'
+        classpath 'com.android.tools.build:gradle:7.4.2' // Use the latest Android Gradle plugin version
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath 'dev.flutter.flutter-gradle-plugin:1.0.0' // Use the latest Flutter Gradle plugin version
     }
 }
 
@@ -29,6 +28,6 @@ subprojects {
     project.evaluationDependsOn(':app')
 }
 
-tasks.register("clean", Delete) {
+task clean(type: Delete) {
     delete rootProject.buildDir
 }
